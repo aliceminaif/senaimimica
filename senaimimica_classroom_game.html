@@ -1,0 +1,1346 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENAIMIMICA - Jogo de Mímica Educacional</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        senai: {
+                            red: '#cc092f',
+                            darkRed: '#a30725',
+                            light: '#f8fafc',
+                            dark: '#1e293b'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        /* Theme variables */
+        :root {
+            --bg-main: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+        }
+        body.theme-light {
+            --bg-main: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+        }
+        body.theme-dark {
+            --bg-main: #0b0f19;
+            --card-bg: #131b2e;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+        }
+        body.theme-senai {
+            --bg-main: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #4b5563;
+            --border-color: #e5e7eb;
+            --primary: #cc092f;
+            --primary-hover: #a30725;
+        }
+        .app-bg { background-color: var(--bg-main); color: var(--text-main); }
+        .card-bg { background-color: var(--card-bg); border-color: var(--border-color); }
+        .text-main { color: var(--text-main); }
+        .text-muted { color: var(--text-muted); }
+        .btn-primary { background-color: var(--primary); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+    </style>
+</head>
+<body class="app-bg h-full flex flex-col justify-between selection:bg-red-500 selection:text-white transition-colors duration-300 theme-senai" id="bodyRoot">
+
+    <header class="w-full px-6 py-4 border-b card-bg flex justify-between items-center shadow-sm z-20">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-xl text-white shadow-md" id="headerLogoBg" style="background-color: var(--primary);">
+                <i class="fa-solid fa-masks-theater"></i>
+            </div>
+            <div>
+                <h1 class="font-extrabold text-xl tracking-tight text-main">SENAI<span style="color: var(--primary);">MÍMICA</span></h1>
+                <p class="text-xs text-muted font-medium">Jogo de Mímica Educacional para Sala de Aula</p>
+            </div>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <!-- Theme selector -->
+            <div class="hidden sm:flex items-center space-x-1 bg-slate-200 dark:bg-slate-800 p-1 rounded-xl">
+                <button onclick="setTheme('light')" id="btnThemeLight" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-700 dark:text-slate-300">Claro</button>
+                <button onclick="setTheme('dark')" id="btnThemeDark" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-700 dark:text-slate-300">Escuro</button>
+                <button onclick="setTheme('senai')" id="btnThemeSenai" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-700 dark:text-slate-300 shadow">SENAI</button>
+            </div>
+
+            <!-- Sound toggle -->
+            <button onclick="toggleAudioMaster()" id="btnAudioToggle" title="Ativar/Desativar Som" class="w-10 h-10 rounded-xl card-bg border flex items-center justify-center text-main hover:opacity-80 transition shadow-sm">
+                <i id="audioIcon" class="fa-solid fa-volume-high"></i>
+            </button>
+
+            <!-- Fullscreen toggle -->
+            <button onclick="toggleFullScreen()" title="Tela Cheia" class="w-10 h-10 rounded-xl card-bg border flex items-center justify-center text-main hover:opacity-80 transition shadow-sm">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-center max-w-7xl mx-auto w-full">
+
+        <!-- VIEW 1: HOME SCREEN -->
+        <div id="viewHome" class="w-full max-w-4xl flex flex-col items-center text-center space-y-8 animate-fadeIn">
+            <div class="relative w-48 h-48 md:w-64 md:h-64 rounded-3xl flex items-center justify-center shadow-2xl overflow-hidden border-4 card-bg group">
+                <div class="absolute inset-0 opacity-10 bg-gradient-to-tr from-current to-transparent"></div>
+                <i class="fa-solid fa-people-group text-7xl md:text-9xl transition transform group-hover:scale-110 duration-500" style="color: var(--primary);"></i>
+            </div>
+
+            <div class="space-y-3 max-w-2xl">
+                <h2 class="text-4xl md:text-6xl font-black tracking-tight text-main">Comunicação, Ação e Trabalho em Equipe!</h2>
+                <p class="text-base md:text-lg text-muted">Engaje sua turma com um jogo de mímica interativo e dinâmico direto na projeção da sala de aula. Sem necessidade de cadastros ou celulares.</p>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 pt-4">
+                <button onclick="goToSetup()" class="btn-primary text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition flex items-center space-x-3">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Iniciar Partida</span>
+                </button>
+                <button onclick="openModalHowToPlay()" class="card-bg border text-main px-6 py-4 rounded-2xl font-bold text-base hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-circle-question" style="color: var(--primary);"></i>
+                    <span>Como Jogar</span>
+                </button>
+                <button onclick="openModalSettings()" class="card-bg border text-main px-6 py-4 rounded-2xl font-bold text-base hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center space-x-2 shadow-sm">
+                    <i class="fa-solid fa-gear"></i>
+                    <span>Configurações</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 2: SETUP SCREEN -->
+        <div id="viewSetup" class="w-full max-w-4xl card-bg border rounded-3xl p-6 md:p-8 shadow-xl hidden space-y-6">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="text-2xl font-black text-main flex items-center space-x-3">
+                    <i class="fa-solid fa-sliders" style="color: var(--primary);"></i>
+                    <span>Configuração da Partida</span>
+                </h3>
+                <button onclick="goToHome()" class="text-muted hover:text-main text-sm font-semibold flex items-center space-x-1">
+                    <i class="fa-solid fa-arrow-left"></i> <span>Voltar</span>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Teams Config -->
+                <div class="space-y-3">
+                    <label class="block text-sm font-bold text-main">Quantidade de Equipes (2 a 6)</label>
+                    <select id="setupTeamCount" onchange="renderTeamInputs()" class="w-full card-bg border rounded-xl p-3 text-main font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="2">2 Equipes</option>
+                        <option value="3">3 Equipes</option>
+                        <option value="4" selected>4 Equipes</option>
+                        <option value="5">5 Equipes</option>
+                        <option value="6">6 Equipes</option>
+                    </select>
+                    <div id="setupTeamNamesContainer" class="space-y-2 pt-2">
+                        <!-- Dynamic team name inputs generated here -->
+                    </div>
+                </div>
+
+                <!-- Game Rules Config -->
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-bold text-main">Modo de Partida</label>
+                        <select id="setupGameMode" class="w-full card-bg border rounded-xl p-3 text-main font-semibold mt-1">
+                            <option value="rounds">Por Quantidade de Rodadas</option>
+                            <option value="score">Até Atingir Pontuação Definida</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label id="lblRoundsOrScore" class="block text-xs font-bold text-muted">Total de Rodadas</label>
+                            <input type="number" id="setupRounds" value="3" min="1" max="20" class="w-full card-bg border rounded-xl p-3 text-main font-semibold mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-muted">Tempo por Rodada (seg)</label>
+                            <select id="setupTimer" class="w-full card-bg border rounded-xl p-3 text-main font-semibold mt-1">
+                                <option value="30">30 segundos</option>
+                                <option value="45">45 segundos</option>
+                                <option value="60" selected>60 segundos</option>
+                                <option value="90">90 segundos</option>
+                                <option value="120">120 segundos</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-muted">Pontos por Acerto</label>
+                            <input type="number" id="setupPointsPerHit" value="10" min="1" max="100" class="w-full card-bg border rounded-xl p-3 text-main font-semibold mt-1">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-muted">Dificuldade</label>
+                            <select id="setupDifficulty" class="w-full card-bg border rounded-xl p-3 text-main font-semibold mt-1">
+                                <option value="all">Todas (Misturadas)</option>
+                                <option value="easy">Fácil</option>
+                                <option value="medium">Médio</option>
+                                <option value="hard">Difícil</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Categories Selection -->
+            <div class="space-y-3 pt-4 border-t">
+                <div class="flex justify-between items-center">
+                    <label class="block text-sm font-bold text-main">Categorias de Palavras (Selecione uma ou mais)</label>
+                    <div class="space-x-2">
+                        <button onclick="toggleAllCategories(true)" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Selecionar Todas</button>
+                        <span class="text-muted">|</span>
+                        <button onclick="toggleAllCategories(false)" class="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">Limpar</button>
+                    </div>
+                </div>
+                <div id="setupCategoriesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <!-- Dynamic categories checkboxes -->
+                </div>
+            </div>
+
+            <!-- Optional Rules -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="setupAllowSkip" checked class="w-5 h-5 accent-indigo-600 rounded">
+                    <span class="text-sm font-semibold text-main">Permitir Pular Palavra</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                    <input type="checkbox" id="setupSkipPenalty" class="w-5 h-5 accent-indigo-600 rounded">
+                    <span class="text-sm font-semibold text-main">Aplicar Penalidade por Pular (-5 pts)</span>
+                </label>
+            </div>
+
+            <div class="flex justify-end pt-4">
+                <button onclick="startMatch()" class="btn-primary text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center space-x-3">
+                    <i class="fa-solid fa-play"></i>
+                    <span>Começar Jogo Agora!</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 3: GAMEPLAY SCREEN -->
+        <div id="viewGame" class="w-full max-w-6xl flex flex-col space-y-6 hidden">
+            <!-- Top Dashboard Bar -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="card-bg border rounded-2xl p-4 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg" style="background-color: var(--primary);">
+                        <i class="fa-solid fa-flag"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-muted">Rodada Atual</p>
+                        <h4 id="gameDisplayRound" class="text-xl font-black text-main">1 / 3</h4>
+                    </div>
+                </div>
+
+                <div class="card-bg border rounded-2xl p-4 shadow-sm flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500 flex items-center justify-center text-white font-bold text-lg">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-semibold text-muted">Equipe da Vez</p>
+                        <h4 id="gameDisplayCurrentTeam" class="text-lg font-black text-main truncate max-w-[150px]">Equipe 1</h4>
+                    </div>
+                </div>
+
+                <div class="card-bg border rounded-2xl p-4 shadow-sm col-span-2 flex items-center justify-around">
+                    <div class="text-center">
+                        <p class="text-xs font-semibold text-muted">Acertos</p>
+                        <h4 id="gameDisplayHits" class="text-xl font-black text-emerald-600">0</h4>
+                    </div>
+                    <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                    <div class="text-center">
+                        <p class="text-xs font-semibold text-muted">Puladas</p>
+                        <h4 id="gameDisplaySkips" class="text-xl font-black text-amber-600">0</h4>
+                    </div>
+                    <div class="h-8 w-px bg-slate-200 dark:bg-slate-700"></div>
+                    <div class="text-center">
+                        <p class="text-xs font-semibold text-muted">Pontos da Rodada</p>
+                        <h4 id="gameDisplayRoundScore" class="text-xl font-black text-main">0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Interactive Stage (Teacher Privacy Mode / Projector Board) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Left/Center: Timer & Stage Projector Display -->
+                <div class="lg:col-span-2 card-bg border rounded-3xl p-6 md:p-10 shadow-xl flex flex-col items-center justify-between text-center relative overflow-hidden min-h-[420px]">
+                    <div id="timerWarningPulse" class="absolute inset-0 bg-red-500 opacity-0 pointer-events-none transition-opacity duration-300"></div>
+
+                    <!-- State 1: Preparation / Waiting to Start -->
+                    <div id="stageStateWaiting" class="my-auto space-y-6 z-10 w-full">
+                        <div class="w-24 h-24 rounded-full mx-auto flex items-center justify-center text-white text-4xl shadow-xl animate-bounce" style="background-color: var(--primary);">
+                            <i class="fa-solid fa-clapperboard"></i>
+                        </div>
+                        <div class="space-y-2">
+                            <h3 id="waitingTeamTitle" class="text-3xl font-black text-main">Vez da Equipe 1</h3>
+                            <p class="text-muted text-base">Prepare o participante da equipe. A palavra secreta ficará visível apenas aqui para o professor até iniciar!</p>
+                        </div>
+                        <button onclick="startPreparationCountdown()" class="btn-primary text-white px-10 py-5 rounded-2xl font-black text-xl shadow-xl hover:scale-105 transition transform inline-flex items-center space-x-3">
+                            <i class="fa-solid fa-play"></i>
+                            <span>Iniciar Rodada</span>
+                        </button>
+                    </div>
+
+                    <!-- State 2: Countdown 3, 2, 1 -->
+                    <div id="stageStateCountdown" class="my-auto space-y-4 z-10 hidden">
+                        <p class="text-lg font-bold text-muted">Preparem-se!</p>
+                        <h2 id="countdownNumber" class="text-8xl md:text-9xl font-black" style="color: var(--primary);">3</h2>
+                        <p class="text-sm text-muted">A mímica vai começar...</p>
+                    </div>
+
+                    <!-- State 3: Active Round & Secret Word Reveal -->
+                    <div id="stageStateActive" class="my-auto space-y-6 z-10 w-full hidden">
+                        <!-- Huge Timer -->
+                        <div class="flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-stopwatch text-2xl" style="color: var(--primary);"></i>
+                            <span id="gameTimerDisplay" class="text-6xl md:text-7xl font-black tracking-tight text-main">60</span>
+                            <span class="text-xl font-bold text-muted">s</span>
+                        </div>
+
+                        <!-- Secret Word Box (Private / Teacher control) -->
+                        <div class="bg-slate-900 dark:bg-black text-white p-6 rounded-3xl shadow-inner border border-slate-700 max-w-lg mx-auto w-full relative group">
+                            <div class="flex justify-between items-center mb-1">
+                                <p class="text-xs uppercase tracking-widest font-bold text-red-500">Palavra Secreta (Mímico)</p>
+                                <button onclick="toggleWordVisibility()" id="btnToggleWord" class="text-xs font-bold px-3 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 transition flex items-center space-x-1">
+                                    <i id="eyeIcon" class="fa-solid fa-eye-slash"></i>
+                                    <span id="eyeText">Ocultar Palavra</span>
+                                </button>
+                            </div>
+                            
+                            <div id="secretWordContainer" class="py-2">
+                                <h3 id="secretWordBox" class="text-3xl md:text-4xl font-black tracking-wide text-amber-400">FOGUETE ESPACIAL</h3>
+                            </div>
+                            <div id="hiddenWordPlaceholder" class="py-2 hidden">
+                                <h3 class="text-3xl md:text-4xl font-black tracking-widest text-slate-600 select-none">••••••••••••</h3>
+                            </div>
+
+                            <div class="flex justify-center items-center space-x-2 mt-2 pt-2 border-t border-slate-800 text-xs text-slate-400">
+                                <span id="secretWordCategory" class="bg-slate-800 px-2.5 py-1 rounded-lg">Esportes</span>
+                                <span id="secretWordDifficulty" class="bg-slate-800 px-2.5 py-1 rounded-lg text-amber-400">Médio</span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons during round -->
+                        <div class="flex flex-wrap justify-center gap-3 pt-2">
+                            <button onclick="scoreHit()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-lg transition flex items-center space-x-2">
+                                <i class="fa-solid fa-check"></i>
+                                <span>ACERTOU! (+10)</span>
+                            </button>
+                            <button id="btnSkipWord" onclick="scoreSkip()" class="bg-amber-600 hover:bg-amber-700 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-lg transition flex items-center space-x-2">
+                                <i class="fa-solid fa-forward"></i>
+                                <span>PULAR</span>
+                            </button>
+                            <button onclick="scoreMiss()" class="bg-rose-600 hover:bg-rose-700 text-white px-6 py-4 rounded-2xl font-black text-lg shadow-lg transition flex items-center space-x-2">
+                                <i class="fa-solid fa-xmark"></i>
+                                <span>NÃO ACERTOU</span>
+                            </button>
+                        </div>
+
+                        <div class="flex justify-center space-x-3 pt-2">
+                            <button onclick="pauseRound()" class="card-bg border text-main px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                                <i class="fa-solid fa-pause"></i> Pausar
+                            </button>
+                            <button onclick="endRoundEarly()" class="card-bg border text-rose-500 px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+                                <i class="fa-solid fa-stop"></i> Encerrar Rodada
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- State 4: Paused State -->
+                    <div id="stageStatePaused" class="my-auto space-y-6 z-10 hidden">
+                        <div class="w-20 h-20 bg-amber-500 text-white rounded-full mx-auto flex items-center justify-center text-3xl shadow-lg">
+                            <i class="fa-solid fa-pause"></i>
+                        </div>
+                        <h3 class="text-3xl font-black text-main">Partida Pausada</h3>
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="resumeRound()" class="btn-primary text-white px-8 py-3 rounded-xl font-bold shadow-lg">Retomar</button>
+                            <button onclick="endRoundEarly()" class="bg-rose-600 text-white px-6 py-3 rounded-xl font-bold shadow-lg">Encerrar Rodada</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Scoreboard Sidebar -->
+                <div class="card-bg border rounded-3xl p-6 shadow-xl flex flex-col justify-between space-y-4">
+                    <div>
+                        <h3 class="font-black text-lg text-main mb-4 flex items-center space-x-2">
+                            <i class="fa-solid fa-trophy text-amber-500"></i>
+                            <span>Placar Geral</span>
+                        </h3>
+                        <div id="gameScoreboardList" class="space-y-3">
+                            <!-- Team scores injected dynamically -->
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t flex flex-col space-y-2">
+                        <button onclick="undoLastAction()" id="btnUndo" disabled class="card-bg border text-main px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition disabled:opacity-40 disabled:cursor-not-allowed">
+                            <i class="fa-solid fa-rotate-left"></i> Desfazer Última Ação
+                        </button>
+                        <button onclick="confirmCancelMatch()" class="card-bg border text-rose-500 px-4 py-2.5 rounded-xl text-xs font-bold hover:bg-rose-50 dark:hover:bg-rose-950/30 transition">
+                            <i class="fa-solid fa-triangle-exclamation"></i> Cancelar Partida
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 4: ROUND SUMMARY SCREEN -->
+        <div id="viewRoundSummary" class="w-full max-w-2xl card-bg border rounded-3xl p-6 md:p-8 shadow-xl hidden space-y-6 text-center">
+            <div class="w-20 h-20 rounded-full mx-auto flex items-center justify-center text-white text-3xl shadow-xl bg-emerald-600">
+                <i class="fa-solid fa-clipboard-check"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-3xl font-black text-main">Resumo da Rodada</h3>
+                <p id="summaryTeamName" class="text-lg font-bold" style="color: var(--primary);">Equipe 1</p>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 py-4 border-y">
+                <div class="p-3 card-bg rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Acertos</p>
+                    <h4 id="summaryHitsCount" class="text-2xl font-black text-emerald-600">0</h4>
+                </div>
+                <div class="p-3 card-bg rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Puladas</p>
+                    <h4 id="summarySkipsCount" class="text-2xl font-black text-amber-600">0</h4>
+                </div>
+                <div class="p-3 card-bg rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Pontos Ganhos</p>
+                    <h4 id="summaryPointsEarned" class="text-2xl font-black text-main">0</h4>
+                </div>
+            </div>
+
+            <div class="flex justify-center pt-2">
+                <button onclick="proceedNextTurn()" class="btn-primary text-white px-8 py-4 rounded-2xl font-bold text-lg shadow-lg hover:shadow-xl transition flex items-center space-x-3">
+                    <span>Próxima Equipe / Rodada</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 5: FINAL RESULTS SCREEN -->
+        <div id="viewResults" class="w-full max-w-4xl card-bg border rounded-3xl p-6 md:p-10 shadow-xl hidden space-y-8 text-center">
+            <div class="w-24 h-24 bg-amber-500 text-white rounded-3xl mx-auto flex items-center justify-center text-5xl shadow-2xl animate-bounce">
+                <i class="fa-solid fa-award"></i>
+            </div>
+
+            <div class="space-y-3">
+                <h2 class="text-4xl md:text-5xl font-black text-main">Fim de Jogo!</h2>
+                <p id="resultsWinnerAnnouncement" class="text-2xl font-bold" style="color: var(--primary);">Equipe Vencedora: Equipe 1</p>
+            </div>
+
+            <div id="resultsPodiumList" class="space-y-3 max-w-xl mx-auto">
+                <!-- Podium items inserted dynamically -->
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4 border-t">
+                <div class="card-bg p-4 rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Total de Rodadas</p>
+                    <h4 id="resTotalRounds" class="text-xl font-black text-main">3</h4>
+                </div>
+                <div class="card-bg p-4 rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Palavras Acertadas</p>
+                    <h4 id="resTotalHits" class="text-xl font-black text-emerald-600">14</h4>
+                </div>
+                <div class="card-bg p-4 rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Palavras Puladas</p>
+                    <h4 id="resTotalSkips" class="text-xl font-black text-amber-600">2</h4>
+                </div>
+                <div class="card-bg p-4 rounded-2xl border">
+                    <p class="text-xs font-semibold text-muted">Pontuação Máxima</p>
+                    <h4 id="resMaxScore" class="text-xl font-black text-main">60</h4>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap justify-center gap-4 pt-4">
+                <button onclick="restartSameSettings()" class="btn-primary text-white px-6 py-3.5 rounded-2xl font-bold shadow-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-rotate-right"></i>
+                    <span>Jogar Novamente (Mesmas Configurações)</span>
+                </button>
+                <button onclick="goToSetup()" class="card-bg border text-main px-6 py-3.5 rounded-2xl font-bold shadow-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Nova Partida (Alterar Configurações)</span>
+                </button>
+                <button onclick="goToHome()" class="card-bg border text-main px-6 py-3.5 rounded-2xl font-bold shadow-sm flex items-center space-x-2">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Voltar ao Início</span>
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="w-full py-4 text-center text-xs text-muted card-bg border-t">
+        <p>SENAIMIMICA &bull; Software Educacional de Mímica &bull; Uso Exclusivo em Sala de Aula</p>
+    </footer>
+
+    <!-- MODAL: HOW TO PLAY -->
+    <div id="modalHowToPlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden animate-fadeIn">
+        <div class="card-bg border rounded-3xl max-w-2xl w-full p-6 md:p-8 space-y-6 shadow-2xl relative max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="text-2xl font-black text-main flex items-center space-x-2">
+                    <i class="fa-solid fa-book-open" style="color: var(--primary);"></i>
+                    <span>Como Jogar o SENAIMIMICA</span>
+                </h3>
+                <button onclick="closeModalHowToPlay()" class="w-8 h-8 rounded-full card-bg border flex items-center justify-center text-main hover:opacity-80">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4 text-sm text-muted leading-relaxed">
+                <p><strong class="text-main">Visão Geral:</strong> O SENAIMIMICA foi projetado para ser operado pelo professor no computador da sala de aula conectado ao projetor. Os alunos participam divididos em equipes, sem precisar de celulares.</p>
+                <div class="space-y-2">
+                    <h5 class="font-bold text-main">Regras Básicas:</h5>
+                    <ul class="list-disc pl-5 space-y-1">
+                        <li>Cada equipe tem um tempo determinado por rodada (ex: 60 segundos).</li>
+                        <li>O participante da vez vai até a frente da sala (ou próximo à projeção) e recebe a palavra secreta na tela de controle do professor.</li>
+                        <li>A turma tenta adivinhar a mímica antes que o tempo esgote.</li>
+                        <li>O professor clica em <strong class="text-emerald-600">"Acertou!"</strong> para pontuar, ou <strong class="text-amber-600">"Pular"</strong> se necessário.</li>
+                        <li>O sistema gerencia automaticamente o rodízio das equipes e o placar final!</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t">
+                <button onclick="closeModalHowToPlay()" class="btn-primary text-white px-6 py-3 rounded-xl font-bold">Entendido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: SETTINGS -->
+    <div id="modalSettings" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden animate-fadeIn">
+        <div class="card-bg border rounded-3xl max-w-md w-full p-6 space-y-6 shadow-2xl">
+            <div class="flex justify-between items-center border-b pb-4">
+                <h3 class="text-xl font-black text-main flex items-center space-x-2">
+                    <i class="fa-solid fa-gear" style="color: var(--primary);"></i>
+                    <span>Configurações do Sistema</span>
+                </h3>
+                <button onclick="closeModalSettings()" class="w-8 h-8 rounded-full card-bg border flex items-center justify-center text-main">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-muted mb-2">Volume dos Efeitos Sonoros</label>
+                    <input type="range" id="settingsVolumeRange" min="0" max="1" step="0.1" value="0.7" onchange="updateVolume(this.value)" class="w-full accent-indigo-600">
+                </div>
+
+                <div class="pt-2 flex justify-between items-center border-t">
+                    <span class="text-sm font-semibold text-main">Testar Sons do Sistema</span>
+                    <button onclick="soundTestSound()" class="card-bg border text-main px-4 py-2 rounded-xl text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 transition">
+                        <i class="fa-solid fa-volume-high"></i> Tocar Teste
+                    </button>
+                </div>
+
+                <div class="pt-2 flex justify-between items-center border-t">
+                    <span class="text-sm font-semibold text-rose-500">Limpar Histórico Salvo</span>
+                    <button onclick="clearLocalStorageData()" class="bg-rose-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-rose-700 transition">
+                        Limpar Dados
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t">
+                <button onclick="closeModalSettings()" class="btn-primary text-white px-6 py-2.5 rounded-xl font-bold">Salvar e Fechar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* -------------------------------------------------------------
+           WORD BANK (Categorized & Difficulty Classified in Brazilian Portuguese)
+           ------------------------------------------------------------- */
+        const WORD_BANK = [
+            // Animais
+            { word: "Leão", category: "Animais", difficulty: "easy" },
+            { word: "Macaco", category: "Animais", difficulty: "easy" },
+            { word: "Pinguim", category: "Animais", difficulty: "medium" },
+            { word: "Camaleão", category: "Animais", difficulty: "hard" },
+            { word: "Polvo", category: "Animais", difficulty: "medium" },
+            { word: "Canguru", category: "Animais", difficulty: "easy" },
+            
+            // Profissões
+            { word: "Bombeiro", category: "Profissões", difficulty: "easy" },
+            { word: "Dentista", category: "Profissões", difficulty: "medium" },
+            { word: "Astronauta", category: "Profissões", difficulty: "easy" },
+            { word: "Chef de Cozinha", category: "Profissões", difficulty: "medium" },
+            { word: "Mágico", category: "Profissões", difficulty: "easy" },
+            { word: "Mecânico", category: "Profissões", difficulty: "medium" },
+
+            // Filmes e Personagens
+            { word: "Homem-Aranha", category: "Filmes e personagens", difficulty: "easy" },
+            { word: "Harry Potter", category: "Filmes e personagens", difficulty: "easy" },
+            { word: "Titanic", category: "Filmes e personagens", difficulty: "medium" },
+            { word: "Star Wars", category: "Filmes e personagens", difficulty: "medium" },
+            { word: "Batman", category: "Filmes e personagens", difficulty: "easy" },
+            { word: "Jurassic Park", category: "Filmes e personagens", difficulty: "hard" },
+
+            // Objetos
+            { word: "Guarda-chuva", category: "Objetos", difficulty: "easy" },
+            { word: "Escova de Dentes", category: "Objetos", difficulty: "easy" },
+            { word: "Violão", category: "Objetos", difficulty: "medium" },
+            { word: "Microscópio", category: "Objetos", difficulty: "hard" },
+            { word: "Relógio de Pêndulo", category: "Objetos", difficulty: "hard" },
+
+            // Esportes
+            { word: "Futebol", category: "Esportes", difficulty: "easy" },
+            { word: "Basquete", category: "Esportes", difficulty: "easy" },
+            { word: "Surfe", category: "Esportes", difficulty: "medium" },
+            { word: "Boliche", category: "Esportes", difficulty: "easy" },
+            { word: "Ginástica Olímpica", category: "Esportes", difficulty: "hard" },
+
+            // Ações e Atividades
+            { word: "Dormir", category: "Ações e atividades", difficulty: "easy" },
+            { word: "Pescar", category: "Ações e atividades", difficulty: "easy" },
+            { word: "Tirar Selfie", category: "Ações e atividades", difficulty: "medium" },
+            { word: "Pintar uma Parede", category: "Ações e atividades", difficulty: "medium" },
+            { word: "Trocar o Pneu", category: "Ações e atividades", difficulty: "hard" },
+
+            // Comidas
+            { word: "Pizza", category: "Comidas", difficulty: "easy" },
+            { word: "Macarrão", category: "Comidas", difficulty: "easy" },
+            { word: "Pipoca", category: "Comidas", difficulty: "easy" },
+            { word: "Churrasco", category: "Comidas", difficulty: "medium" },
+
+            // Lugares
+            { word: "Praia", category: "Lugares", difficulty: "easy" },
+            { word: "Escola", category: "Lugares", difficulty: "easy" },
+            { word: "Cinema", category: "Lugares", difficulty: "medium" },
+            { word: "Laboratório de Robótica", category: "Lugares", difficulty: "hard" },
+
+            // Natureza
+            { word: "Tsunami", category: "Natureza", difficulty: "hard" },
+            { word: "Terremoto", category: "Natureza", difficulty: "medium" },
+            { word: "Vulcão Entrando em Erupção", category: "Natureza", difficulty: "hard" },
+            { word: "Chuva com Raios", category: "Natureza", difficulty: "medium" },
+
+            // Cultura brasileira
+            { word: "Carnaval", category: "Cultura brasileira", difficulty: "easy" },
+            { word: "Feijoada", category: "Cultura brasileira", difficulty: "medium" },
+            { word: "Capoeira", category: "Cultura brasileira", difficulty: "medium" },
+            { word: "Festa Junina", category: "Cultura brasileira", difficulty: "easy" },
+
+            // Temas escolares
+            { word: "Professor Braiala", category: "Temas escolares", difficulty: "hard" },
+            { word: "Prova Final", category: "Temas escolares", difficulty: "medium" },
+            { word: "Sino do Recreio", category: "Temas escolares", difficulty: "easy" },
+            { word: "Impressora 3D", category: "Temas escolares", difficulty: "hard" }
+        ];
+
+        /* -------------------------------------------------------------
+           APPLICATION STATE
+           ------------------------------------------------------------- */
+        let gameState = {
+            theme: 'senai',
+            audioEnabled: true,
+            audioVolume: 0.7,
+            isWordVisible: true,
+            teams: [
+                { name: "Equipe Alfa", score: 0 },
+                { name: "Equipe Beta", score: 0 },
+                { name: "Equipe Gama", score: 0 },
+                { name: "Equipe Delta", score: 0 }
+            ],
+            gameMode: 'rounds', // 'rounds' or 'score'
+            totalRounds: 3,
+            currentRound: 1,
+            timerDuration: 60,
+            pointsPerHit: 10,
+            selectedCategories: [],
+            difficulty: 'all',
+            allowSkip: true,
+            skipPenalty: false,
+            currentTeamIndex: 0,
+            roundHits: 0,
+            roundSkips: 0,
+            roundScore: 0,
+            currentWord: null,
+            remainingTime: 60,
+            timerInterval: null,
+            isPaused: false,
+            actionHistory: [], // For undo functionality
+            usedWordIds: new Set()
+        };
+
+        // Web Audio API Synth Engine
+        let audioCtx = null;
+        function getAudioContext() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            return audioCtx;
+        }
+
+        function playSynthSound(type) {
+            if (!gameState.audioEnabled) return;
+            try {
+                const ctx = getAudioContext();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                const now = ctx.currentTime;
+
+                gain.gain.setValueAtTime(gameState.audioVolume, now);
+
+                if (type === 'start') {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.exponentialRampToValueAtTime(600, now + 0.3);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                    osc.start(now);
+                    osc.stop(now + 0.4);
+                } else if (type === 'hit') {
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.setValueAtTime(880, now + 0.1);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.start(now);
+                    osc.stop(now + 0.3);
+                } else if (type === 'skip') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(250, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.2);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                } else if (type === 'tick') {
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(800, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.05);
+                    osc.start(now);
+                    osc.stop(now + 0.05);
+                } else if (type === 'end') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.linearRampToValueAtTime(150, now + 0.6);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.7);
+                    osc.start(now);
+                    osc.stop(now + 0.7);
+                } else if (type === 'victory') {
+                    const notes = [523.25, 659.25, 783.99, 1046.50];
+                    notes.forEach((freq, idx) => {
+                        const o = ctx.createOscillator();
+                        const g = ctx.createGain();
+                        o.frequency.setValueAtTime(freq, now + idx * 0.15);
+                        g.gain.setValueAtTime(gameState.audioVolume, now + idx * 0.15);
+                        g.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.15 + 0.3);
+                        o.connect(g);
+                        g.connect(ctx.destination);
+                        o.start(now + idx * 0.15);
+                        o.stop(now + idx * 0.15 + 0.3);
+                    });
+                }
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+            } catch (e) {
+                console.debug("Audio play error:", e);
+            }
+        }
+
+        function soundTestSound() {
+            playSynthSound('victory');
+        }
+
+        /* -------------------------------------------------------------
+           INITIALIZATION & PERSISTENCE
+           ------------------------------------------------------------- */
+        window.onload = function() {
+            loadFromLocalStorage();
+            populateCategoriesCheckboxes();
+            renderTeamInputs();
+            updateAudioUI();
+            applyTheme(gameState.theme);
+        };
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('senaimimica_prefs');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    if (data.theme) gameState.theme = data.theme;
+                    if (typeof data.audioEnabled === 'boolean') gameState.audioEnabled = data.audioEnabled;
+                    if (typeof data.audioVolume === 'number') gameState.audioVolume = data.audioVolume;
+                } catch(e) {}
+            }
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                theme: gameState.theme,
+                audioEnabled: gameState.audioEnabled,
+                audioVolume: gameState.audioVolume
+            };
+            localStorage.setItem('senaimimica_prefs', JSON.stringify(data));
+        }
+
+        /* -------------------------------------------------------------
+           THEME & UI NAVIGATION
+           ------------------------------------------------------------- */
+        function setTheme(themeName) {
+            gameState.theme = themeName;
+            applyTheme(themeName);
+            saveToLocalStorage();
+        }
+
+        function applyTheme(themeName) {
+            const body = document.getElementById('bodyRoot');
+            body.className = `app-bg h-full flex flex-col justify-between selection:bg-red-500 selection:text-white transition-colors duration-300 theme-${themeName}`;
+            
+            // Highlight active button
+            ['light', 'dark', 'senai'].forEach(t => {
+                const btn = document.getElementById(`btnTheme${t.charAt(0).toUpperCase() + t.slice(1)}`);
+                if (btn) {
+                    if (t === themeName) {
+                        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all shadow bg-white dark:bg-slate-700 text-slate-900 dark:text-white";
+                    } else {
+                        btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-slate-700 dark:text-slate-300";
+                    }
+                }
+            });
+        }
+
+        function toggleAudioMaster() {
+            gameState.audioEnabled = !gameState.audioEnabled;
+            updateAudioUI();
+            saveToLocalStorage();
+        }
+
+        function updateAudioUI() {
+            const icon = document.getElementById('audioIcon');
+            if (gameState.audioEnabled) {
+                icon.className = "fa-solid fa-volume-high";
+            } else {
+                icon.className = "fa-solid fa-volume-xmark";
+            }
+        }
+
+        function updateVolume(val) {
+            gameState.audioVolume = parseFloat(val);
+            saveToLocalStorage();
+        }
+
+        function toggleFullScreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {});
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+            }
+        }
+
+        function switchView(viewId) {
+            ['viewHome', 'viewSetup', 'viewGame', 'viewRoundSummary', 'viewResults'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(viewId);
+            if (target) target.classList.remove('hidden');
+        }
+
+        function goToHome() {
+            stopTimerInterval();
+            switchView('viewHome');
+        }
+
+        function goToSetup() {
+            stopTimerInterval();
+            switchView('viewSetup');
+        }
+
+        /* -------------------------------------------------------------
+           SETUP LOGIC
+           ------------------------------------------------------------- */
+        function populateCategoriesCheckboxes() {
+            const container = document.getElementById('setupCategoriesGrid');
+            const uniqueCategories = [...new Set(WORD_BANK.map(w => w.category))];
+            
+            container.innerHTML = uniqueCategories.map(cat => `
+                <label class="flex items-center space-x-2 p-2 card-bg border rounded-xl cursor-pointer hover:opacity-80 transition">
+                    <input type="checkbox" value="${cat}" checked class="category-checkbox w-4 h-4 accent-indigo-600 rounded">
+                    <span class="text-xs font-semibold text-main truncate">${cat}</span>
+                </label>
+            `).join('');
+        }
+
+        function toggleAllCategories(select) {
+            document.querySelectorAll('.category-checkbox').forEach(cb => cb.checked = select);
+        }
+
+        function renderTeamInputs() {
+            const count = parseInt(document.getElementById('setupTeamCount').value);
+            const container = document.getElementById('setupTeamNamesContainer');
+            const defaultNames = ["Equipe Alfa", "Equipe Beta", "Equipe Gama", "Equipe Delta", "Equipe Ômega", "Equipe Zeta"];
+            
+            let html = '';
+            for (let i = 0; i < count; i++) {
+                const currentName = gameState.teams[i] ? gameState.teams[i].name : defaultNames[i];
+                html += `
+                    <div class="flex items-center space-x-2">
+                        <span class="text-xs font-bold text-muted w-16">Equipe ${i+1}:</span>
+                        <input type="text" id="setupTeamNameInput_${i}" value="${currentName}" class="w-full card-bg border rounded-xl p-2 text-sm font-semibold text-main">
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        function startMatch() {
+            // Gather setup configuration
+            const teamCount = parseInt(document.getElementById('setupTeamCount').value);
+            gameState.teams = [];
+            for (let i = 0; i < teamCount; i++) {
+                const inputVal = document.getElementById(`setupTeamNameInput_${i}`).value.trim();
+                gameState.teams.push({
+                    name: inputVal || `Equipe ${i+1}`,
+                    score: 0
+                });
+            }
+
+            gameState.gameMode = document.getElementById('setupGameMode').value;
+            gameState.totalRounds = parseInt(document.getElementById('setupRounds').value) || 3;
+            gameState.timerDuration = parseInt(document.getElementById('setupTimer').value) || 60;
+            gameState.pointsPerHit = parseInt(document.getElementById('setupPointsPerHit').value) || 10;
+            gameState.difficulty = document.getElementById('setupDifficulty').value;
+            gameState.allowSkip = document.getElementById('setupAllowSkip').checked;
+            gameState.skipPenalty = document.getElementById('setupSkipPenalty').checked;
+
+            const checkedCats = document.querySelectorAll('.category-checkbox:checked');
+            gameState.selectedCategories = Array.from(checkedCats).map(cb => cb.value);
+
+            if (gameState.selectedCategories.length === 0) {
+                alert("Selecione pelo menos uma categoria de palavras!");
+                return;
+            }
+
+            // Initialize game variables
+            gameState.currentRound = 1;
+            gameState.currentTeamIndex = 0;
+            gameState.usedWordIds = new Set();
+            gameState.actionHistory = [];
+
+            playSynthSound('start');
+            prepareNewRound();
+            switchView('viewGame');
+        }
+
+        /* -------------------------------------------------------------
+           GAMEPLAY & STAGE CONTROLLER
+           ------------------------------------------------------------- */
+        function prepareNewRound() {
+            gameState.roundHits = 0;
+            gameState.roundSkips = 0;
+            gameState.roundScore = 0;
+            gameState.remainingTime = gameState.timerDuration;
+            gameState.isPaused = false;
+            gameState.actionHistory = [];
+            gameState.isWordVisible = true;
+            updateWordVisibilityUI();
+
+            // Update UI elements
+            document.getElementById('gameDisplayRound').innerText = `${gameState.currentRound} / ${gameState.totalRounds}`;
+            document.getElementById('gameDisplayCurrentTeam').innerText = gameState.teams[gameState.currentTeamIndex].name;
+            document.getElementById('waitingTeamTitle').innerText = `Vez da ${gameState.teams[gameState.currentTeamIndex].name}`;
+            document.getElementById('gameDisplayHits').innerText = '0';
+            document.getElementById('gameDisplaySkips').innerText = '0';
+            document.getElementById('gameDisplayRoundScore').innerText = '0';
+            document.getElementById('gameTimerDisplay').innerText = gameState.timerDuration;
+
+            // Enable skip button based on rules
+            const btnSkip = document.getElementById('btnSkipWord');
+            if (btnSkip) btnSkip.disabled = !gameState.allowSkip;
+
+            setStageState('waiting');
+            updateScoreboardSidebar();
+            drawNewWord();
+        }
+
+        function setStageState(state) {
+            ['stageStateWaiting', 'stageStateCountdown', 'stageStateActive', 'stageStatePaused'].forEach(id => {
+                document.getElementById(id).classList.add('hidden');
+            });
+            if (state === 'waiting') document.getElementById('stageStateWaiting').classList.remove('hidden');
+            if (state === 'countdown') document.getElementById('stageStateCountdown').classList.remove('hidden');
+            if (state === 'active') document.getElementById('stageStateActive').classList.remove('hidden');
+            if (state === 'paused') document.getElementById('stageStatePaused').classList.remove('hidden');
+        }
+
+        function drawNewWord() {
+            // Filter available words
+            let pool = WORD_BANK.filter(w => {
+                if (!gameState.selectedCategories.includes(w.category)) return false;
+                if (gameState.difficulty !== 'all' && w.difficulty !== gameState.difficulty) return false;
+                if (gameState.usedWordIds.has(w.word)) return false;
+                return true;
+            });
+
+            // Reset used words if pool exhausted
+            if (pool.length === 0) {
+                gameState.usedWordIds.clear();
+                pool = WORD_BANK.filter(w => gameState.selectedCategories.includes(w.category));
+            }
+
+            if (pool.length === 0) {
+                gameState.currentWord = { word: "Mímica Livre", category: "Geral", difficulty: "easy" };
+            } else {
+                const randomIndex = Math.floor(Math.random() * pool.length);
+                gameState.currentWord = pool[randomIndex];
+                gameState.usedWordIds.add(gameState.currentWord.word);
+            }
+
+            // Display in secret word box
+            document.getElementById('secretWordBox').innerText = gameState.currentWord.word;
+            document.getElementById('secretWordCategory').innerText = gameState.currentWord.category;
+            document.getElementById('secretWordDifficulty').innerText = gameState.currentWord.difficulty.toUpperCase();
+            
+            // Keep visibility state consistent
+            updateWordVisibilityUI();
+        }
+
+        function toggleWordVisibility() {
+            gameState.isWordVisible = !gameState.isWordVisible;
+            updateWordVisibilityUI();
+        }
+
+        function updateWordVisibilityUI() {
+            const wordContainer = document.getElementById('secretWordContainer');
+            const placeholder = document.getElementById('hiddenWordPlaceholder');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeText = document.getElementById('eyeText');
+
+            if (!wordContainer || !placeholder) return;
+
+            if (gameState.isWordVisible) {
+                wordContainer.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+                if (eyeIcon) eyeIcon.className = "fa-solid fa-eye-slash";
+                if (eyeText) eyeText.innerText = "Ocultar Palavra";
+            } else {
+                wordContainer.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                if (eyeIcon) eyeIcon.className = "fa-solid fa-eye";
+                if (eyeText) eyeText.innerText = "Revelar Palavra";
+            }
+        }
+
+        function startPreparationCountdown() {
+            playSynthSound('tick');
+            setStageState('countdown');
+            let count = 3;
+            const countEl = document.getElementById('countdownNumber');
+            countEl.innerText = count;
+
+            const interval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countEl.innerText = count;
+                    playSynthSound('tick');
+                } else if (count === 0) {
+                    countEl.innerText = "JÁ!";
+                    playSynthSound('start');
+                } else {
+                    clearInterval(interval);
+                    startActiveRound();
+                }
+            }, 1000);
+        }
+
+        function startActiveRound() {
+            setStageState('active');
+            playSynthSound('start');
+            
+            const startTime = Date.now();
+            const expectedDuration = gameState.remainingTime * 1000;
+
+            gameState.timerInterval = setInterval(() => {
+                if (gameState.isPaused) return;
+
+                const elapsed = Date.now() - startTime;
+                const left = Math.max(0, Math.ceil((expectedDuration - elapsed) / 1000));
+                gameState.remainingTime = left;
+
+                document.getElementById('gameTimerDisplay').innerText = left;
+
+                // Final 10 seconds warning
+                if (left <= 10 && left > 0) {
+                    playSynthSound('tick');
+                    triggerTimerPulseWarning();
+                }
+
+                if (left <= 0) {
+                    stopTimerInterval();
+                    playSynthSound('end');
+                    finishRound();
+                }
+            }, 250);
+        }
+
+        function stopTimerInterval() {
+            if (gameState.timerInterval) {
+                clearInterval(gameState.timerInterval);
+                gameState.timerInterval = null;
+            }
+        }
+
+        function triggerTimerPulseWarning() {
+            const pulse = document.getElementById('timerWarningPulse');
+            if (pulse) {
+                pulse.classList.remove('opacity-0');
+                pulse.classList.add('opacity-20');
+                setTimeout(() => {
+                    pulse.classList.remove('opacity-20');
+                    pulse.classList.add('opacity-0');
+                }, 300);
+            }
+        }
+
+        function pauseRound() {
+            gameState.isPaused = true;
+            setStageState('paused');
+            stopTimerInterval();
+        }
+
+        function resumeRound() {
+            gameState.isPaused = false;
+            startActiveRound();
+        }
+
+        function scoreHit() {
+            playSynthSound('hit');
+            gameState.roundHits++;
+            gameState.roundScore += gameState.pointsPerHit;
+            
+            // Push action for undo
+            gameState.actionHistory.push({ type: 'hit', points: gameState.pointsPerHit });
+            document.getElementById('btnUndo').disabled = false;
+
+            updateGameDisplayCounters();
+            drawNewWord();
+        }
+
+        function scoreSkip() {
+            if (!gameState.allowSkip) return;
+            playSynthSound('skip');
+            gameState.roundSkips++;
+
+            let penalty = 0;
+            if (gameState.skipPenalty) {
+                penalty = 5;
+                gameState.roundScore = Math.max(0, gameState.roundScore - penalty);
+            }
+
+            gameState.actionHistory.push({ type: 'skip', penalty: penalty });
+            document.getElementById('btnUndo').disabled = false;
+
+            updateGameDisplayCounters();
+            drawNewWord();
+        }
+
+        function scoreMiss() {
+            playSynthSound('skip');
+            gameState.roundSkips++;
+            gameState.actionHistory.push({ type: 'miss' });
+            document.getElementById('btnUndo').disabled = false;
+
+            updateGameDisplayCounters();
+            drawNewWord();
+        }
+
+        function undoLastAction() {
+            if (gameState.actionHistory.length === 0) return;
+            const lastAction = gameState.actionHistory.pop();
+
+            if (lastAction.type === 'hit') {
+                gameState.roundHits = Math.max(0, gameState.roundHits - 1);
+                gameState.roundScore = Math.max(0, gameState.roundScore - lastAction.points);
+            } else if (lastAction.type === 'skip') {
+                gameState.roundSkips = Math.max(0, gameState.roundSkips - 1);
+                if (lastAction.penalty > 0) {
+                    gameState.roundScore += lastAction.penalty;
+                }
+            } else if (lastAction.type === 'miss') {
+                gameState.roundSkips = Math.max(0, gameState.roundSkips - 1);
+            }
+
+            if (gameState.actionHistory.length === 0) {
+                document.getElementById('btnUndo').disabled = true;
+            }
+
+            updateGameDisplayCounters();
+            drawNewWord();
+        }
+
+        function updateGameDisplayCounters() {
+            document.getElementById('gameDisplayHits').innerText = gameState.roundHits;
+            document.getElementById('gameDisplaySkips').innerText = gameState.roundSkips;
+            document.getElementById('gameDisplayRoundScore').innerText = gameState.roundScore;
+        }
+
+        function endRoundEarly() {
+            stopTimerInterval();
+            finishRound();
+        }
+
+        function finishRound() {
+            // Add round score to current team
+            gameState.teams[gameState.currentTeamIndex].score += gameState.roundScore;
+
+            // Populate Summary View
+            document.getElementById('summaryTeamName').innerText = gameState.teams[gameState.currentTeamIndex].name;
+            document.getElementById('summaryHitsCount').innerText = gameState.roundHits;
+            document.getElementById('summarySkipsCount').innerText = gameState.roundSkips;
+            document.getElementById('summaryPointsEarned').innerText = gameState.roundScore;
+
+            switchView('viewRoundSummary');
+        }
+
+        function proceedNextTurn() {
+            // Check winning conditions or next team
+            gameState.currentTeamIndex++;
+            if (gameState.currentTeamIndex >= gameState.teams.length) {
+                gameState.currentTeamIndex = 0;
+                gameState.currentRound++;
+            }
+
+            // Check if game is finished
+            let isFinished = false;
+            if (gameState.gameMode === 'rounds' && gameState.currentRound > gameState.totalRounds) {
+                isFinished = true;
+            } else if (gameState.gameMode === 'score') {
+                const targetScore = parseInt(document.getElementById('setupRounds').value) || 100;
+                const maxScore = Math.max(...gameState.teams.map(t => t.score));
+                if (maxScore >= targetScore) isFinished = true;
+            }
+
+            if (isFinished) {
+                showFinalResults();
+            } else {
+                prepareNewRound();
+                switchView('viewGame');
+            }
+        }
+
+        function updateScoreboardSidebar() {
+            const list = document.getElementById('gameScoreboardList');
+            let html = '';
+            gameState.teams.forEach((team, idx) => {
+                const isCurrent = (idx === gameState.currentTeamIndex);
+                html += `
+                    <div class="flex justify-between items-center p-3 rounded-xl border ${isCurrent ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30' : 'card-bg'}">
+                        <div class="flex items-center space-x-2">
+                            <span class="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${isCurrent ? 'btn-primary text-white' : 'bg-slate-200 dark:bg-slate-700 text-main'}">${idx+1}</span>
+                            <span class="text-sm font-bold text-main truncate max-w-[120px]">${team.name}</span>
+                        </div>
+                        <span class="text-base font-black" style="color: var(--primary);">${team.score} pts</span>
+                    </div>
+                `;
+            });
+            list.innerHTML = html;
+        }
+
+        function confirmCancelMatch() {
+            if (confirm("Deseja realmente cancelar a partida atual? Todo o progresso será perdido.")) {
+                stopTimerInterval();
+                goToHome();
+            }
+        }
+
+        /* -------------------------------------------------------------
+           RESULTS & PODIUM
+           ------------------------------------------------------------- */
+        function showFinalResults() {
+            playSynthSound('victory');
+            switchView('viewResults');
+
+            // Sort teams by score descending
+            const sortedTeams = [...gameState.teams].sort((a, b) => b.score - a.score);
+            const winner = sortedTeams[0];
+
+            document.getElementById('resultsWinnerAnnouncement').innerText = `Equipe Vencedora: ${winner.name} (${winner.score} pts)!`;
+
+            const podiumList = document.getElementById('resultsPodiumList');
+            podiumList.innerHTML = sortedTeams.map((team, idx) => `
+                <div class="flex justify-between items-center p-4 rounded-2xl border card-bg shadow-sm">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-xl flex items-center justify-center font-black text-white ${idx === 0 ? 'bg-amber-500' : idx === 1 ? 'bg-slate-400' : 'bg-amber-700'}">
+                            ${idx + 1}º
+                        </div>
+                        <span class="font-bold text-main text-base">${team.name}</span>
+                    </div>
+                    <span class="text-xl font-black" style="color: var(--primary);">${team.score} pts</span>
+                </div>
+            `).join('');
+
+            document.getElementById('resTotalRounds').innerText = gameState.currentRound - 1;
+            document.getElementById('resTotalHits').innerText = gameState.roundHits; // cumulative approx or last
+            document.getElementById('resTotalSkips').innerText = gameState.roundSkips;
+            document.getElementById('resMaxScore').innerText = winner.score;
+        }
+
+        function restartSameSettings() {
+            gameState.teams.forEach(t => t.score = 0);
+            gameState.currentRound = 1;
+            gameState.currentTeamIndex = 0;
+            gameState.usedWordIds.clear();
+            playSynthSound('start');
+            prepareNewRound();
+            switchView('viewGame');
+        }
+
+        /* -------------------------------------------------------------
+           MODALS CONTROL
+           ------------------------------------------------------------- */
+        function openModalHowToPlay() {
+            document.getElementById('modalHowToPlay').classList.remove('hidden');
+        }
+        function closeModalHowToPlay() {
+            document.getElementById('modalHowToPlay').classList.add('hidden');
+        }
+
+        function openModalSettings() {
+            document.getElementById('settingsVolumeRange').value = gameState.audioVolume;
+            document.getElementById('modalSettings').classList.remove('hidden');
+        }
+        function closeModalSettings() {
+            document.getElementById('modalSettings').classList.add('hidden');
+        }
+
+        function clearLocalStorageData() {
+            if (confirm("Tem certeza que deseja apagar todas as preferências salvas?")) {
+                localStorage.removeItem('senaimimica_prefs');
+                alert("Dados limpos com sucesso!");
+                closeModalSettings();
+            }
+        }
+    </script>
+</body>
+</html>
