@@ -933,7 +933,7 @@
             { word: "Tirar Selfie", category: "Ações e atividades", difficulty: "medium" },
             { word: "Pintar uma Parede", category: "Ações e atividades", difficulty: "medium" },
             { word: "Trocar o Pneu", category: "Ações e atividades", difficulty: "hard" },
-             { word: "Escovar os cabelos", category: "Ações e atividades", difficulty: "easy" },
+            { word: "Escovar os cabelos", category: "Ações e atividades", difficulty: "easy" },
             { word: "Lavar a louça", category: "Ações e atividades", difficulty: "easy" },
             { word: "Varrer o chão", category: "Ações e atividades", difficulty: "easy" },
             { word: "Passar roupa", category: "Ações e atividades", difficulty: "easy" },
@@ -973,7 +973,6 @@
             { word: "Equilibrar um livro na cabeça", category: "Ações e atividades", difficulty: "medium" },
             { word: "Montar um móvel", category: "Ações e atividades", difficulty: "medium" },
             { word: "Desembrulhar um chiclete", category: "Ações e atividades", difficulty: "medium" },
-            
 
             // Comidas
             { word: "Pizza", category: "Comidas", difficulty: "easy" },
@@ -1233,12 +1232,16 @@
             roundHits: 0,
             roundSkips: 0,
             roundScore: 0,
+            totalHits: 0,   // acumulado da partida (tela final)
+            totalSkips: 0,  // acumulado da partida (tela final)
             currentWord: null,
             remainingTime: 60,
             timerInterval: null,
             isPaused: false,
             actionHistory: [], // For undo functionality
-            usedWordIds: new Set()
+            usedWordIds: new Set(),
+            turnDeck: [],   // lista de palavras sorteada UMA vez no início do turno da equipe
+            deckIndex: 0    // posição atual dentro da lista sorteada
         };
 
         // Web Audio API Synth Engine
@@ -1500,6 +1503,10 @@
             gameState.currentTeamIndex = 0;
             gameState.usedWordIds = new Set();
             gameState.actionHistory = [];
+            gameState.totalHits = 0;
+            gameState.totalSkips = 0;
+            gameState.turnDeck = [];
+            gameState.deckIndex = 0;
 
             playSynthSound('start');
             prepareNewRound();
@@ -1527,6 +1534,7 @@
             document.getElementById('gameDisplaySkips').innerText = '0';
             document.getElementById('gameDisplayRoundScore').innerText = '0';
             document.getElementById('gameTimerDisplay').innerText = gameState.timerDuration;
+            document.getElementById('btnUndo').disabled = true;
 
             // Enable skip button based on rules
             const btnSkip = document.getElementById('btnSkipWord');
@@ -1534,7 +1542,10 @@
 
             setStageState('waiting');
             updateScoreboardSidebar();
-            drawNewWord();
+
+            // SORTEIO ÚNICO: a lista de palavras do turno é sorteada aqui, uma vez por equipe
+            buildTurnDeck();
+            showCurrentWord();
         }
 
         function setStageState(state) {
@@ -1547,36 +1558,77 @@
             if (state === 'paused') document.getElementById('stageStatePaused').classList.remove('hidden');
         }
 
-        function drawNewWord() {
-            // Filter available words
-            let pool = WORD_BANK.filter(w => {
+        /* -------------------------------------------------------------
+           ALGORITMO PSEUDOALEATÓRIO (SORTEIO ÚNICO POR TURNO)
+           - A lista é embaralhada (Fisher-Yates) apenas no início do turno
+             de cada equipe.
+           - Durante o turno, o sistema apenas AVANÇA nessa lista
+             (acertou / pulou / não acertou) e nunca sorteia de novo.
+           - "Desfazer" volta uma posição na mesma lista.
+           - Quando a próxima equipe começa, uma nova lista é sorteada,
+             sem repetir palavras já usadas na partida.
+           ------------------------------------------------------------- */
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function getFilteredPool(excludeUsed) {
+            return WORD_BANK.filter(w => {
                 if (!gameState.selectedCategories.includes(w.category)) return false;
                 if (gameState.difficulty !== 'all' && w.difficulty !== gameState.difficulty) return false;
-                if (gameState.usedWordIds.has(w.word)) return false;
+                if (excludeUsed && gameState.usedWordIds.has(w.word)) return false;
                 return true;
             });
+        }
 
-            // Reset used words if pool exhausted
+        function buildTurnDeck() {
+            let pool = getFilteredPool(true);
+
+            // Se todas as palavras já foram usadas na partida, reinicia o histórico
             if (pool.length === 0) {
                 gameState.usedWordIds.clear();
-                pool = WORD_BANK.filter(w => gameState.selectedCategories.includes(w.category));
+                pool = getFilteredPool(false);
             }
 
-            if (pool.length === 0) {
-                gameState.currentWord = { word: "Mímica Livre", category: "Geral", difficulty: "easy" };
-            } else {
-                const randomIndex = Math.floor(Math.random() * pool.length);
-                gameState.currentWord = pool[randomIndex];
-                gameState.usedWordIds.add(gameState.currentWord.word);
+            gameState.turnDeck = shuffleArray([...pool]);
+            gameState.deckIndex = 0;
+
+            if (gameState.turnDeck.length === 0) {
+                gameState.turnDeck = [{ word: "Mímica Livre", category: "Geral", difficulty: "easy" }];
+            }
+        }
+
+        function showCurrentWord() {
+            // Segurança: se a lista do turno acabou, estende com uma nova lista embaralhada
+            if (gameState.deckIndex >= gameState.turnDeck.length) {
+                const lastWord = gameState.turnDeck[gameState.turnDeck.length - 1];
+                let extra = shuffleArray([...getFilteredPool(false)]);
+                if (extra.length > 1 && lastWord && extra[0].word === lastWord.word) {
+                    [extra[0], extra[1]] = [extra[1], extra[0]];
+                }
+                if (extra.length === 0) {
+                    extra = [{ word: "Mímica Livre", category: "Geral", difficulty: "easy" }];
+                }
+                gameState.turnDeck = gameState.turnDeck.concat(extra);
             }
 
-            // Display in secret word box
+            gameState.currentWord = gameState.turnDeck[gameState.deckIndex];
+            gameState.usedWordIds.add(gameState.currentWord.word);
+
             document.getElementById('secretWordBox').innerText = gameState.currentWord.word;
             document.getElementById('secretWordCategory').innerText = gameState.currentWord.category;
             document.getElementById('secretWordDifficulty').innerText = gameState.currentWord.difficulty.toUpperCase();
 
-            // Keep visibility state consistent
             updateWordVisibilityUI();
+        }
+
+        function advanceToNextWord() {
+            gameState.deckIndex++;
+            showCurrentWord();
         }
 
         function toggleWordVisibility() {
@@ -1628,6 +1680,7 @@
         }
 
         function startActiveRound() {
+            stopTimerInterval();
             setStageState('active');
             playSynthSound('start');
 
@@ -1697,7 +1750,7 @@
             document.getElementById('btnUndo').disabled = false;
 
             updateGameDisplayCounters();
-            drawNewWord();
+            advanceToNextWord();
         }
 
         function scoreSkip() {
@@ -1707,15 +1760,15 @@
 
             let penalty = 0;
             if (gameState.skipPenalty) {
-                penalty = 5;
-                gameState.roundScore = Math.max(0, gameState.roundScore - penalty);
+                penalty = Math.min(5, gameState.roundScore); // desconto real aplicado (evita desfazer devolver pontos a mais)
+                gameState.roundScore -= penalty;
             }
 
             gameState.actionHistory.push({ type: 'skip', penalty: penalty });
             document.getElementById('btnUndo').disabled = false;
 
             updateGameDisplayCounters();
-            drawNewWord();
+            advanceToNextWord();
         }
 
         function scoreMiss() {
@@ -1725,7 +1778,7 @@
             document.getElementById('btnUndo').disabled = false;
 
             updateGameDisplayCounters();
-            drawNewWord();
+            advanceToNextWord();
         }
 
         function undoLastAction() {
@@ -1749,7 +1802,12 @@
             }
 
             updateGameDisplayCounters();
-            drawNewWord();
+
+            // Volta para a palavra anterior da MESMA lista sorteada (sem novo sorteio)
+            if (gameState.deckIndex > 0) {
+                gameState.deckIndex--;
+            }
+            showCurrentWord();
         }
 
         function updateGameDisplayCounters() {
@@ -1766,6 +1824,8 @@
         function finishRound() {
             // Add round score to current team
             gameState.teams[gameState.currentTeamIndex].score += gameState.roundScore;
+            gameState.totalHits += gameState.roundHits;
+            gameState.totalSkips += gameState.roundSkips;
 
             // Populate Summary View
             document.getElementById('summaryTeamName').innerText = gameState.teams[gameState.currentTeamIndex].name;
@@ -1797,7 +1857,7 @@
             if (isFinished) {
                 showFinalResults();
             } else {
-                prepareNewRound();
+                prepareNewRound(); // nova equipe = novo sorteio da lista de palavras
                 switchView('viewGame');
             }
         }
@@ -1853,9 +1913,9 @@
                 </div>
             `).join('');
 
-            document.getElementById('resTotalRounds').innerText = gameState.currentRound - 1;
-            document.getElementById('resTotalHits').innerText = gameState.roundHits; // cumulative approx or last
-            document.getElementById('resTotalSkips').innerText = gameState.roundSkips;
+            document.getElementById('resTotalRounds').innerText = gameState.currentTeamIndex === 0 ? gameState.currentRound - 1 : gameState.currentRound;
+            document.getElementById('resTotalHits').innerText = gameState.totalHits;
+            document.getElementById('resTotalSkips').innerText = gameState.totalSkips;
             document.getElementById('resMaxScore').innerText = winner.score;
         }
 
@@ -1864,6 +1924,8 @@
             gameState.currentRound = 1;
             gameState.currentTeamIndex = 0;
             gameState.usedWordIds.clear();
+            gameState.totalHits = 0;
+            gameState.totalSkips = 0;
             playSynthSound('start');
             prepareNewRound();
             switchView('viewGame');
